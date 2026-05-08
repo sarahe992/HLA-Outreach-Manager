@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  LEADERSHIP
+  LEAD_AMBASSADOR
+  AMBASSADOR
+}
+
+enum ThreadType {
+  GROUP
+  DIRECT
+}
+
+model User {
+  id             String   @id @default(cuid())
+  name           String
+  email          String   @unique
+  phone          String?
+  passwordHash   String
+  role           Role     @default(AMBASSADOR)
+  graduationYear String?
+  major          String?
+  teamId         String?
+  createdAt      DateTime @default(now())
+
+  team                  Team?                  @relation(fields: [teamId], references: [id])
+  tablingSignups        TablingSignup[]
+  pitchingEvents        PitchingEvent[]
+  sentMessages          Message[]
+  threadMemberships     ThreadMember[]
+  sentAnnouncements     Announcement[]
+  announcementRecipients AnnouncementRecipient[] @relation("UserAnnouncements")
+  notifications         Notification[]
+  createdTablingEvents  TablingEvent[]
+  invitesCreated        InviteToken[]          @relation("InviteCreator")
+  feedback              Feedback[]
+}
+
+model Team {
+  id         String   @id @default(cuid())
+  name       String
+  isArchived Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  users         User[]
+  tablingEvents TablingEvent[]
+  threads       Thread[]
+  announcementRecipients AnnouncementRecipient[] @relation("TeamAnnouncements")
+}
+
+model InviteToken {
+  id          String    @id @default(cuid())
+  token       String    @unique @default(cuid())
+  role        Role
+  usedAt      DateTime?
+  expiresAt   DateTime
+  createdById String
+  createdAt   DateTime  @default(now())
+
+  createdBy User @relation("InviteCreator", fields: [createdById], references: [id])
+}
+
+// ─── Tabling ──────────────────────────────────────────────────────────────────
+
+model TablingEvent {
+  id          String   @id @default(cuid())
+  teamId      String
+  location    String
+  date        DateTime
+  snackPlan   String?
+  createdById String
+  createdAt   DateTime @default(now())
+
+  team        Team              @relation(fields: [teamId], references: [id])
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  slots       TablingSlot[]
+  postData    TablingPostData?
+}
+
+model TablingSlot {
+  id             String   @id @default(cuid())
+  tablingEventId String
+  startTime      DateTime
+  endTime        DateTime
+
+  tablingEvent TablingEvent    @relation(fields: [tablingEventId], references: [id], onDelete: Cascade)
+  signups      TablingSignup[]
+}
+
+model TablingSignup {
+  id          String    @id @default(cuid())
+  slotId      String
+  userId      String
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  slot TablingSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id])
+
+  @@unique([slotId, userId])
+}
+
+model TablingPostData {
+  id              String @id @default(cuid())
+  tablingEventId  String @unique
+  studentsReached Int
+  ambassadorsShowed Int
+  totalHours      Float
+
+  tablingEvent TablingEvent @relation(fields: [tablingEventId], references: [id], onDelete: Cascade)
+}
+
+// ─── Pitching ─────────────────────────────────────────────────────────────────
+
+model PitchingEvent {
+  id            String    @id @default(cuid())
+  userId        String
+  className     String
+  professorName String
+  scheduledAt   DateTime
+  studentCount  Int?
+  isCompleted   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ─── Messaging ────────────────────────────────────────────────────────────────
+
+model Thread {
+  id        String     @id @default(cuid())
+  type      ThreadType
+  teamId    String?
+  createdAt DateTime   @default(now())
+
+  team    Team?          @relation(fields: [teamId], references: [id])
+  members ThreadMember[]
+  messages Message[]
+}
+
+model ThreadMember {
+  id       String @id @default(cuid())
+  threadId String
+  userId   String
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([threadId, userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  threadId  String
+  senderId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  sender User   @relation(fields: [senderId], references: [id])
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  senderId  String
+  subject   String
+  body      String
+  createdAt DateTime @default(now())
+
+  sender     User                    @relation(fields: [senderId], references: [id])
+  recipients AnnouncementRecipient[]
+}
+
+model AnnouncementRecipient {
+  id             String  @id @default(cuid())
+  announcementId String
+  userId         String?
+  teamId         String?
+
+  announcement Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  user         User?        @relation("UserAnnouncements", fields: [userId], references: [id])
+  team         Team?        @relation("TeamAnnouncements", fields: [teamId], references: [id])
+}
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}

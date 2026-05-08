@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* ── HLA Brand Colors ─────────────────────────────────────────────────────────
+   Replace these values with HLA's real hex codes once the brand kit is provided.
+   All brand colors are defined here in one place.
+   ─────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Primary navy */
+  --color-hla-50:  #f0f4ff;
+  --color-hla-100: #dde6ff;
+  --color-hla-200: #c3d1ff;
+  --color-hla-300: #9db4ff;
+  --color-hla-400: #718cfe;
+  --color-hla-500: #4d65fb;
+  --color-hla-600: #2f43f0;
+  --color-hla-700: #1c2fd6;  /* ← primary action color */
+  --color-hla-800: #1826b0;
+  --color-hla-900: #19238e;
+  --color-hla-950: #121660;
+
+  /* Gold accent */
+  --color-gold-400: #f5c842;
+  --color-gold-500: #e8b830;
+  --color-gold-600: #c99920;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #f8f9fb;
+  --foreground: #0f172a;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
