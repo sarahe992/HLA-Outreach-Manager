@@ -20,7 +20,8 @@ export async function POST(request: NextRequest) {
       createdById: session.user.id,
     },
   });
-  const url = `${process.env.NEXTAUTH_URL}/invite/${invite.token}`;
+  const base = (process.env.NEXTAUTH_URL ?? "").replace(/\/$/, "");
+  const url = `${base}/invite/${invite.token}`;
   return NextResponse.json({ token: invite.token, url }, { status: 201 });
 }
 
