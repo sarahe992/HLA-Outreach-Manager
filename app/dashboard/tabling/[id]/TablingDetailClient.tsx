@@ -32,6 +32,14 @@ export default function TablingDetailClient({ event, role, userId }: Props) {
   });
   const [postOpen, setPostOpen] = useState(false);
   const [loadingSlot, setLoadingSlot] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  async function handleDelete() {
+    if (!confirm("Are you sure you want to delete this tabling event?")) return;
+    setDeleting(true);
+    await fetch(`/api/tabling/${event.id}`, { method: "DELETE" });
+    router.push("/dashboard/tabling");
+  }
 
   async function handleSignup(slotId: string) {
     setLoadingSlot(slotId);
@@ -84,11 +92,18 @@ export default function TablingDetailClient({ event, role, userId }: Props) {
           <h1 className="text-2xl font-bold text-hla-900">{event.location}</h1>
           <p className="text-gray-500 text-sm mt-1">Created by {event.createdBy.name}</p>
         </div>
-        {event.postData ? (
-          <Badge variant="secondary">Post-data logged</Badge>
-        ) : (
-          <Badge variant="tabling">Upcoming</Badge>
-        )}
+        <div className="flex items-center gap-2">
+          {event.postData ? (
+            <Badge variant="secondary">Post-data logged</Badge>
+          ) : (
+            <Badge variant="tabling">Upcoming</Badge>
+          )}
+          {canEdit && (
+            <Button variant="destructive" size="sm" onClick={handleDelete} disabled={deleting}>
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
