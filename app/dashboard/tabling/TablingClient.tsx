@@ -57,6 +57,7 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...form,
+        date: form.date ? `${form.date}T12:00:00.000Z` : form.date,
         slots: form.slots.map((s) => ({
           startTime: s.startTime ? new Date(s.startTime).toISOString() : "",
           endTime: s.endTime ? new Date(s.endTime).toISOString() : "",
