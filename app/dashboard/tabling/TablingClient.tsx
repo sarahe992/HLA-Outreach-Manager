@@ -36,6 +36,25 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
     slots: [{ startTime: "", endTime: "" }],
   });
   const [loading, setLoading] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function handleDeleteSelected() {
+    if (!confirm(`Delete ${selected.size} tabling event${selected.size > 1 ? "s" : ""}?`)) return;
+    setDeleting(true);
+    await Promise.all([...selected].map((id) => fetch(`/api/tabling/${id}`, { method: "DELETE" })));
+    setSelected(new Set());
+    setDeleting(false);
+    router.refresh();
+  }
 
   function addSlot() {
     setForm((p) => ({ ...p, slots: [...p.slots, { startTime: "", endTime: "" }] }));
@@ -76,7 +95,13 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
           <h1 className="text-2xl font-bold text-hla-900">Tabling Events</h1>
           <p className="text-gray-500 text-sm mt-1">{events.length} event{events.length !== 1 ? "s" : ""}</p>
         </div>
-        {canCreate && (
+        <div className="flex items-center gap-2">
+          {canCreate && selected.size > 0 && (
+            <Button variant="destructive" onClick={handleDeleteSelected} disabled={deleting}>
+              {deleting ? "Deleting…" : `Delete (${selected.size})`}
+            </Button>
+          )}
+          {canCreate && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="h-4 w-4 mr-1" /> New Tabling Event</Button>
@@ -130,14 +155,25 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
               </form>
             </DialogContent>
           </Dialog>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {events.map((event) => {
           const signedUp = event.slots.reduce((s, sl) => s + (sl.signups?.length ?? 0), 0);
           return (
-            <Link key={event.id} href={`/dashboard/tabling/${event.id}`}>
+            <div key={event.id} className="relative">
+              {canCreate && (
+                <input
+                  type="checkbox"
+                  checked={selected.has(event.id)}
+                  onChange={() => toggleSelect(event.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-3 left-3 z-10 h-4 w-4 cursor-pointer"
+                />
+              )}
+            <Link href={`/dashboard/tabling/${event.id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
@@ -173,6 +209,7 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
                 </CardContent>
               </Card>
             </Link>
+            </div>
           );
         })}
         {events.length === 0 && (
