@@ -55,7 +55,13 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
     await fetch("/api/tabling", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        slots: form.slots.map((s) => ({
+          startTime: s.startTime ? new Date(s.startTime).toISOString() : "",
+          endTime: s.endTime ? new Date(s.endTime).toISOString() : "",
+        })),
+      }),
     });
     setLoading(false);
     setOpen(false);
