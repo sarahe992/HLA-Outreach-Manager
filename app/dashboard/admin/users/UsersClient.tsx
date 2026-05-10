@@ -64,7 +64,7 @@ export default function UsersClient({ users, teams, invites: initialInvites, rol
     await fetch("/api/users", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: assignOpen.id, teamId: assignTeamId }),
+      body: JSON.stringify({ userId: assignOpen.id, teamId: assignTeamId === "__none__" ? "" : assignTeamId }),
     });
     setAssignOpen(null);
     router.refresh();
@@ -136,10 +136,10 @@ export default function UsersClient({ users, teams, invites: initialInvites, rol
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Team</Label>
-              <Select defaultValue={assignOpen?.teamId ?? ""} onValueChange={setAssignTeamId}>
+              <Select defaultValue={assignOpen?.teamId ?? "__none__"} onValueChange={setAssignTeamId}>
                 <SelectTrigger><SelectValue placeholder="No team" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No team</SelectItem>
+                  <SelectItem value="__none__">No team</SelectItem>
                   {teams.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -175,7 +175,7 @@ export default function UsersClient({ users, teams, invites: initialInvites, rol
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => { setAssignOpen(u); setAssignTeamId(u.teamId ?? ""); }}
+                    onClick={() => { setAssignOpen(u); setAssignTeamId(u.teamId ?? "__none__"); }}
                   >
                     Assign Team
                   </Button>
