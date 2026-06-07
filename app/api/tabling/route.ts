@@ -6,13 +6,8 @@ export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const where =
-    session.user.role === "LEADERSHIP"
-      ? {}
-      : { teamId: session.user.teamId ?? "__none__" };
-
   const events = await db.tablingEvent.findMany({
-    where,
+    where: {},
     include: {
       team: true,
       slots: { include: { signups: { where: { cancelledAt: null }, include: { user: true } } } },

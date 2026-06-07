@@ -6,14 +6,9 @@ export default async function TablingPage() {
   const session = await auth();
   if (!session) return null;
 
-  const teamFilter =
-    session.user.role === "LEADERSHIP"
-      ? {}
-      : { teamId: session.user.teamId ?? "__none__" };
-
   const [events, teams] = await Promise.all([
     db.tablingEvent.findMany({
-      where: teamFilter,
+      where: {},
       include: {
         team: true,
         slots: { include: { signups: { where: { cancelledAt: null } } } },

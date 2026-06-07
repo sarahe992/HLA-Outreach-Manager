@@ -6,14 +6,9 @@ export default async function CalendarPage() {
   const session = await auth();
   if (!session) return null;
 
-  const teamFilter =
-    session.user.role === "LEADERSHIP"
-      ? {}
-      : { teamId: session.user.teamId ?? "__none__" };
-
   const [tablingEvents, pitchingEvents] = await Promise.all([
     db.tablingEvent.findMany({
-      where: teamFilter,
+      where: {},
       include: { team: true, slots: true },
       orderBy: { date: "asc" },
     }),

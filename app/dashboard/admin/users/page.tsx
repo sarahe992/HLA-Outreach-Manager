@@ -12,7 +12,7 @@ export default async function UsersPage() {
       where: session.user.role === "LEAD_AMBASSADOR"
         ? { teamId: session.user.teamId ?? "__none__" }
         : {},
-      select: { id: true, name: true, email: true, role: true, teamId: true, team: true, graduationYear: true, major: true },
+      select: { id: true, name: true, email: true, role: true, teamId: true, team: true, yearInSchool: true, major: true, accountClaimed: true },
       orderBy: [{ role: "asc" }, { name: "asc" }],
     }),
     db.team.findMany({ where: { isArchived: false }, orderBy: { name: "asc" } }),

@@ -40,6 +40,30 @@ export async function createInAppNotification(
   await db.notification.create({ data: { userId, type, body } });
 }
 
+export async function notifyNewAmbassador(name: string, teamId: string) {
+  const [teamLeads, leadership] = await Promise.all([
+    db.user.findMany({
+      where: { teamId, role: "LEAD_AMBASSADOR" },
+    }),
+    db.user.findMany({
+      where: { role: "LEADERSHIP" },
+    }),
+  ]);
+
+  const recipients = [
+    ...teamLeads,
+    ...leadership.filter((l) => !teamLeads.some((tl) => tl.id === l.id)),
+  ];
+
+  const msg = `${name} just signed up and has been added to your team as an ambassador.`;
+
+  for (const user of recipients) {
+    await createInAppNotification(user.id, "NEW_AMBASSADOR", msg);
+    if (user.email)
+      await sendEmail(user.email, "New Ambassador Joined", `<p>${msg}</p>`);
+  }
+}
+
 export async function notifyTablingCancellation(
   cancellerName: string,
   slotId: string

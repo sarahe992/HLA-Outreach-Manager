@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, MapPin, Calendar, Users } from "lucide-react";
+import { Plus, MapPin, Calendar, Users, CheckSquare } from "lucide-react";
 import type { Role } from "@prisma/client";
 
 interface Slot { id: string; startTime: string; endTime: string; signups: unknown[] }
@@ -36,8 +36,14 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
     slots: [{ startTime: "", endTime: "" }],
   });
   const [loading, setLoading] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+
+  function exitSelectMode() {
+    setSelectMode(false);
+    setSelected(new Set());
+  }
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -51,7 +57,7 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
     if (!confirm(`Delete ${selected.size} tabling event${selected.size > 1 ? "s" : ""}?`)) return;
     setDeleting(true);
     await Promise.all([...selected].map((id) => fetch(`/api/tabling/${id}`, { method: "DELETE" })));
-    setSelected(new Set());
+    exitSelectMode();
     setDeleting(false);
     router.refresh();
   }
@@ -96,9 +102,19 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
           <p className="text-gray-500 text-sm mt-1">{events.length} event{events.length !== 1 ? "s" : ""}</p>
         </div>
         <div className="flex items-center gap-2">
-          {canCreate && selected.size > 0 && (
-            <Button variant="destructive" onClick={handleDeleteSelected} disabled={deleting}>
-              {deleting ? "Deleting…" : `Delete (${selected.size})`}
+          {canCreate && selectMode && (
+            <>
+              {selected.size > 0 && (
+                <Button variant="destructive" onClick={handleDeleteSelected} disabled={deleting}>
+                  {deleting ? "Deleting…" : `Delete (${selected.size})`}
+                </Button>
+              )}
+              <Button variant="outline" onClick={exitSelectMode}>Cancel</Button>
+            </>
+          )}
+          {canCreate && !selectMode && (
+            <Button variant="outline" onClick={() => setSelectMode(true)}>
+              <CheckSquare className="h-4 w-4 mr-1" /> Select
             </Button>
           )}
           {canCreate && (
@@ -164,7 +180,7 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
           const signedUp = event.slots.reduce((s, sl) => s + (sl.signups?.length ?? 0), 0);
           return (
             <div key={event.id} className="relative">
-              {canCreate && (
+              {canCreate && selectMode && (
                 <input
                   type="checkbox"
                   checked={selected.has(event.id)}

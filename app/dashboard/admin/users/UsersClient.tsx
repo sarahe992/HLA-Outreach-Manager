@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 interface User {
   id: string; name: string; email: string; role: string;
   teamId?: string; team?: { name: string };
-  graduationYear?: string; major?: string;
+  yearInSchool?: string; major?: string; accountClaimed: boolean;
 }
 interface Team { id: string; name: string }
 interface Invite { id: string; token: string; role: string; expiresAt: string }
@@ -153,7 +153,7 @@ export default function UsersClient({ users, teams, invites: initialInvites, rol
         <table className="w-full text-sm">
           <thead className="bg-hla-50">
             <tr>
-              {["Name", "Email", "Role", "Team", "Major", "Grad Year", ""].map((h) => (
+              {["Name", "Email", "Role", "Team", "Major", "Year", ""].map((h) => (
                 <th key={h} className="text-left px-4 py-3 font-semibold text-hla-800 text-xs uppercase tracking-wide">{h}</th>
               ))}
             </tr>
@@ -161,7 +161,16 @@ export default function UsersClient({ users, teams, invites: initialInvites, rol
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className="border-t border-hla-50 hover:bg-hla-50/50">
-                <td className="px-4 py-3 font-medium">{u.name}</td>
+                <td className="px-4 py-3 font-medium">
+                  <div className="flex items-center gap-2">
+                    {u.name}
+                    {!u.accountClaimed && (
+                      <span className="text-xs bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5 font-normal">
+                        Unclaimed
+                      </span>
+                    )}
+                  </div>
+                </td>
                 <td className="px-4 py-3 text-gray-600">{u.email}</td>
                 <td className="px-4 py-3">
                   <Badge variant={roleBadge[u.role] ?? "outline"}>
@@ -170,7 +179,7 @@ export default function UsersClient({ users, teams, invites: initialInvites, rol
                 </td>
                 <td className="px-4 py-3 text-gray-600">{u.team?.name ?? "—"}</td>
                 <td className="px-4 py-3 text-gray-500">{u.major ?? "—"}</td>
-                <td className="px-4 py-3 text-gray-500">{u.graduationYear ?? "—"}</td>
+                <td className="px-4 py-3 text-gray-500">{u.yearInSchool ?? "—"}</td>
                 <td className="px-4 py-3">
                   <Button
                     variant="ghost"

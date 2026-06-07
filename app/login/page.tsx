@@ -1,12 +1,34 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import Link from "next/link";
+import { CheckCircle2 } from "lucide-react";
+
+function StatusBanner() {
+  const searchParams = useSearchParams();
+  if (searchParams.get("registered") === "1") {
+    return (
+      <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-800 text-sm">
+        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600" />
+        Account created! Sign in to access your dashboard.
+      </div>
+    );
+  }
+  if (searchParams.get("reset") === "1") {
+    return (
+      <div className="flex items-center gap-2.5 bg-green-50 border border-green-200 rounded-xl px-4 py-3 text-green-800 text-sm">
+        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600" />
+        Password updated! Sign in with your new password.
+      </div>
+    );
+  }
+  return null;
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,6 +67,10 @@ export default function LoginPage() {
           <p className="text-hla-200 text-sm mt-1">Healthcare Leadership Association · BYU</p>
         </div>
 
+        <Suspense>
+          <StatusBanner />
+        </Suspense>
+
         <Card className="shadow-2xl border-0">
           <CardHeader>
             <CardTitle>Sign in to your account</CardTitle>
@@ -74,7 +100,14 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && (
+                <div className="space-y-1">
+                  <p className="text-sm text-red-600">{error}</p>
+                  <Link href="/forgot-password" className="text-sm text-hla-700 hover:underline">
+                    Forgot your password?
+                  </Link>
+                </div>
+              )}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? "Signing in…" : "Sign in"}
               </Button>

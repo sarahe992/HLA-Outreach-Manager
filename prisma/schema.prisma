@@ -25,7 +25,11 @@ model User {
   passwordHash   String
   role           Role     @default(AMBASSADOR)
   graduationYear String?
+  yearInSchool   String?
+  fieldOfStudy   String?
   major          String?
+  heardAboutHla  String?
+  accountClaimed Boolean  @default(true)
   teamId         String?
   createdAt      DateTime @default(now())
 
@@ -40,6 +44,18 @@ model User {
   createdTablingEvents  TablingEvent[]
   invitesCreated        InviteToken[]          @relation("InviteCreator")
   feedback              Feedback[]
+  passwordResetTokens   PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  token     String    @unique @default(cuid())
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Team {
