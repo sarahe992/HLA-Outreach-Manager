@@ -48,7 +48,14 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (result?.error) {
-      setError("Invalid email or password.");
+      // Check if this is a pre-imported unclaimed account
+      const check = await fetch("/api/auth/check-unclaimed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const { unclaimed } = await check.json();
+      setError(unclaimed ? "unclaimed" : "invalid");
     } else {
       router.push("/dashboard/calendar");
       router.refresh();
@@ -100,9 +107,18 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              {error && (
+              {error === "unclaimed" && (
+                <div className="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800 space-y-1">
+                  <p className="font-medium">Your email is in our system, but you haven&apos;t set a password yet.</p>
+                  <p>
+                    <Link href="/register" className="underline font-medium">Go to Register</Link>
+                    {" "}to set up your account — it only takes a minute.
+                  </p>
+                </div>
+              )}
+              {error === "invalid" && (
                 <div className="space-y-1">
-                  <p className="text-sm text-red-600">{error}</p>
+                  <p className="text-sm text-red-600">Invalid email or password.</p>
                   <Link href="/forgot-password" className="text-sm text-hla-700 hover:underline">
                     Forgot your password?
                   </Link>
