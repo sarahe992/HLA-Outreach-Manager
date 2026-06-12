@@ -34,3 +34,16 @@ export async function PATCH(request: NextRequest) {
   });
   return NextResponse.json(user);
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await auth();
+  if (!session || session.user.role !== "LEADERSHIP") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const { userIds } = await request.json() as { userIds: string[] };
+  // Prevent deleting yourself
+  const safeIds = userIds.filter((id) => id !== session.user.id);
+  await db.user.deleteMany({ where: { id: { in: safeIds } } });
+  return NextResponse.json({ deleted: safeIds.length });
+}

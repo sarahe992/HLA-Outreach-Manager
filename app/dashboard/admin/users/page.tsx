@@ -37,6 +37,7 @@ export default async function UsersPage() {
       teams={JSON.parse(JSON.stringify(teams))}
       invites={JSON.parse(JSON.stringify(invites))}
       role={session.user.role}
+      currentUserId={session.user.id}
     />
   );
 }
