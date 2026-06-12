@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Name, email, and password are required." }, { status: 400 });
   }
 
-  const existing = await db.user.findUnique({ where: { email } });
+  const normalizedEmail = email.toLowerCase().trim();
+  const existing = await db.user.findUnique({ where: { email: normalizedEmail } });
 
   if (existing) {
     if (!existing.accountClaimed) {
@@ -22,7 +23,7 @@ export async function POST(request: NextRequest) {
       await db.user.update({
         where: { id: existing.id },
         data: {
-          name,
+          name, email: normalizedEmail,
           phone: phone || existing.phone,
           passwordHash,
           accountClaimed: true,
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await db.user.create({
     data: {
-      name, email,
+      name, email: normalizedEmail,
       phone: phone || null,
       passwordHash,
       role: "AMBASSADOR",
