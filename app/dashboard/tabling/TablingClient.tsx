@@ -196,6 +196,8 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
                     <CardTitle className="text-base">{event.location}</CardTitle>
                     {event.postData ? (
                       <Badge variant="secondary">Logged</Badge>
+                    ) : new Date(event.date) < new Date() ? (
+                      <Badge variant="outline">Completed</Badge>
                     ) : (
                       <Badge variant="tabling">Upcoming</Badge>
                     )}
