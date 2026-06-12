@@ -42,8 +42,24 @@ export async function DELETE(request: NextRequest) {
   }
 
   const { userIds } = await request.json() as { userIds: string[] };
-  // Prevent deleting yourself
   const safeIds = userIds.filter((id) => id !== session.user.id);
-  await db.user.deleteMany({ where: { id: { in: safeIds } } });
+
+  await db.$transaction(async (tx) => {
+    for (const userId of safeIds) {
+      await tx.notification.deleteMany({ where: { userId } });
+      await tx.feedback.deleteMany({ where: { userId } });
+      await tx.tablingSignup.deleteMany({ where: { userId } });
+      await tx.announcementRecipient.deleteMany({ where: { userId } });
+      await tx.threadMember.deleteMany({ where: { userId } });
+      await tx.message.deleteMany({ where: { senderId: userId } });
+      await tx.announcement.deleteMany({ where: { senderId: userId } });
+      await tx.pitchingEvent.deleteMany({ where: { userId } });
+      await tx.inviteToken.deleteMany({ where: { createdById: userId } });
+      await tx.tablingEvent.deleteMany({ where: { createdById: userId } });
+      await tx.passwordResetToken.deleteMany({ where: { userId } });
+      await tx.user.delete({ where: { id: userId } });
+    }
+  });
+
   return NextResponse.json({ deleted: safeIds.length });
 }
