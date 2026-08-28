@@ -6,7 +6,8 @@ export async function POST(request: NextRequest) {
   const { email } = await request.json();
   if (!email) return NextResponse.json({ error: "Email required." }, { status: 400 });
 
-  const user = await db.user.findUnique({ where: { email } });
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await db.user.findUnique({ where: { email: normalizedEmail } });
 
   // Always return success so we don't reveal whether an email is registered
   if (!user) return NextResponse.json({ ok: true });
@@ -24,7 +25,8 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password/${token.token}`;
+  const base = (process.env.NEXTAUTH_URL || new URL(request.url).origin).replace(/\/$/, "");
+  const resetUrl = `${base}/reset-password/${token.token}`;
 
   await sendEmail(
     user.email,
