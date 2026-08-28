@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Pencil, Archive, ArchiveRestore, UserPlus, X } from "lucide-react";
+import { Search, Plus, Pencil, Archive, UserPlus, X } from "lucide-react";
 import type { Role } from "@prisma/client";
 
 interface Member {
@@ -44,6 +43,7 @@ export default function TeamsClient({ teams, allUsers, role }: Props) {
   const [newName, setNewName] = useState("");
   const [addOpen, setAddOpen] = useState<Team | null>(null);
   const [addUserId, setAddUserId] = useState("");
+  const [memberSearch, setMemberSearch] = useState("");
 
   async function createTeam(e: React.FormEvent) {
     e.preventDefault();
@@ -119,33 +119,50 @@ export default function TeamsClient({ teams, allUsers, role }: Props) {
       </Dialog>
 
       {/* Add member dialog */}
-      <Dialog open={!!addOpen} onOpenChange={(o) => { if (!o) { setAddOpen(null); setAddUserId(""); } }}>
+      <Dialog open={!!addOpen} onOpenChange={(o) => { if (!o) { setAddOpen(null); setAddUserId(""); setMemberSearch(""); } }}>
         <DialogContent>
           <DialogHeader><DialogTitle>Add Member — {addOpen?.name}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Select Member</Label>
-              <Select onValueChange={setAddUserId}>
-                <SelectTrigger><SelectValue placeholder="Choose a member…" /></SelectTrigger>
-                <SelectContent>
-                  {allUsers
-                    .filter((u) => u.id !== undefined)
-                    .map((u) => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {u.name}
-                        {u.teamId && u.teamId !== addOpen?.id
-                          ? ` (moving from another team)`
-                          : u.teamId === addOpen?.id
-                          ? ` (already on this team)`
-                          : ""}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search members…"
+                value={memberSearch}
+                onChange={(e) => { setMemberSearch(e.target.value); setAddUserId(""); }}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            <div className="max-h-64 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
+              {allUsers
+                .filter((u) => u.name.toLowerCase().includes(memberSearch.toLowerCase()))
+                .map((u) => {
+                  const onThisTeam = u.teamId === addOpen?.id;
+                  const selected = addUserId === u.id;
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => !onThisTeam && setAddUserId(u.id)}
+                      disabled={onThisTeam}
+                      className={`w-full text-left px-4 py-2.5 text-sm flex items-center justify-between transition-colors
+                        ${selected ? "bg-hla-50 text-hla-900 font-medium" : "hover:bg-gray-50 text-gray-700"}
+                        ${onThisTeam ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+                    >
+                      <span>{u.name}</span>
+                      <span className="text-xs text-gray-400">
+                        {onThisTeam ? "Already on team" : u.teamId ? "On another team" : ""}
+                      </span>
+                    </button>
+                  );
+                })}
+              {allUsers.filter((u) => u.name.toLowerCase().includes(memberSearch.toLowerCase())).length === 0 && (
+                <p className="px-4 py-3 text-sm text-gray-400">No members found.</p>
+              )}
             </div>
             <Button
-              className="w-full"
-              disabled={!addUserId || addUserId === ""}
+              className="w-full cursor-pointer"
+              disabled={!addUserId}
               onClick={() => addUserId && assignUser(addUserId, addOpen!.id)}
             >
               Add to Team
@@ -168,7 +185,8 @@ export default function TeamsClient({ teams, allUsers, role }: Props) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => { setAddOpen(team); setAddUserId(""); }}
+                    className="cursor-pointer"
+                    onClick={() => { setAddOpen(team); setAddUserId(""); setMemberSearch(""); }}
                   >
                     <UserPlus className="h-4 w-4 mr-1" /> Add Member
                   </Button>
