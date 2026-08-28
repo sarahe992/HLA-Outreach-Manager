@@ -32,13 +32,14 @@ export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { className, professorName, scheduledAt } = await request.json();
+  const { className, professorName, scheduledAt, studentCount } = await request.json();
   const event = await db.pitchingEvent.create({
     data: {
       userId: session.user.id,
       className,
       professorName,
       scheduledAt: new Date(scheduledAt),
+      studentCount: studentCount ? Number(studentCount) : null,
     },
   });
   return NextResponse.json(event, { status: 201 });

@@ -24,7 +24,7 @@ export default function PitchingClient({ events, role }: Props) {
   const canCreate = role === "AMBASSADOR";
   const [createOpen, setCreateOpen] = useState(false);
   const [editEvent, setEditEvent] = useState<PitchEvent | null>(null);
-  const [form, setForm] = useState({ className: "", professorName: "", scheduledAt: "" });
+  const [form, setForm] = useState({ className: "", professorName: "", scheduledAt: "", studentCount: "" });
   const [editForm, setEditForm] = useState({ className: "", professorName: "", scheduledAt: "", studentCount: "", isCompleted: false });
 
   function set(field: string) {
@@ -39,7 +39,7 @@ export default function PitchingClient({ events, role }: Props) {
       body: JSON.stringify(form),
     });
     setCreateOpen(false);
-    setForm({ className: "", professorName: "", scheduledAt: "" });
+    setForm({ className: "", professorName: "", scheduledAt: "", studentCount: "" });
     router.refresh();
   }
 
@@ -95,6 +95,10 @@ export default function PitchingClient({ events, role }: Props) {
                 <div className="space-y-1.5">
                   <Label>Date & Time</Label>
                   <Input type="datetime-local" value={form.scheduledAt} onChange={set("scheduledAt")} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Estimated Students Reached *</Label>
+                  <Input type="number" min={0} placeholder="e.g. 30" value={form.studentCount} onChange={set("studentCount")} required />
                 </div>
                 <Button type="submit" className="w-full">Log Pitch</Button>
               </form>
