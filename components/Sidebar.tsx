@@ -25,7 +25,7 @@ const nav: NavItem[] = [
   { href: "/dashboard/expectations", label: "Expectations", icon: Award },
   { href: "/dashboard/recruit", label: "Recruit", icon: UserPlus },
   { href: "/dashboard/guidelines", label: "Guidelines", icon: BookOpen, roles: ["LEAD_AMBASSADOR", "LEADERSHIP"] },
-  { href: "/dashboard/admin/teams", label: "Teams", icon: Settings, roles: ["LEADERSHIP"] },
+  { href: "/dashboard/admin/teams", label: "Teams", icon: Settings },
   { href: "/dashboard/admin/users", label: "Users", icon: Users, roles: ["LEADERSHIP", "LEAD_AMBASSADOR"] },
   { href: "/dashboard/admin/feedback", label: "Feedback", icon: Lightbulb, roles: ["LEADERSHIP", "LEAD_AMBASSADOR"] },
 ];
