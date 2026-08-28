@@ -194,7 +194,9 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-base">{event.location}</CardTitle>
-                    {event.postData ? (
+                    {role === "AMBASSADOR" ? (
+                      new Date(event.date) >= new Date() ? <Badge variant="tabling">Upcoming</Badge> : null
+                    ) : event.postData ? (
                       <Badge variant="secondary">Logged</Badge>
                     ) : new Date(event.date) < new Date() ? (
                       <Badge variant="outline">Completed</Badge>
