@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Calendar, Cookie, ChevronLeft, CheckCircle, XCircle } from "lucide-react";
+import { MapPin, Calendar, Cookie, ChevronLeft } from "lucide-react";
 import type { Role } from "@prisma/client";
 
 interface Signup { id: string; cancelledAt: string | null; user: { id: string; name: string } }
@@ -126,48 +126,52 @@ export default function TablingDetailClient({ event, role, userId }: Props) {
       </div>
 
       {/* Time Slots */}
-      <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-hla-900">Time Slots</h2>
-        {event.slots.map((slot) => {
-          const active = slot.signups.filter((s) => !s.cancelledAt);
-          const mySignup = active.find((s) => s.user.id === userId);
-          return (
-            <Card key={slot.id}>
-              <CardContent className="pt-4 flex items-center justify-between gap-4">
-                <div>
-                  <p className="font-medium text-sm">
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold text-hla-900">Sign-Up Slots</h2>
+        <div className="bg-white rounded-xl border border-hla-100 shadow-sm overflow-hidden">
+          {event.slots.map((slot, i) => {
+            const active = slot.signups.filter((s) => !s.cancelledAt);
+            const mySignup = active.find((s) => s.user.id === userId);
+            return (
+              <div
+                key={slot.id}
+                className={`flex items-center justify-between px-4 py-2.5 gap-4 ${i !== 0 ? "border-t border-hla-50" : ""} ${mySignup ? "bg-hla-50" : ""}`}
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <p className="text-sm font-medium text-hla-900 whitespace-nowrap">
                     {format(new Date(slot.startTime), "h:mm a")} – {format(new Date(slot.endTime), "h:mm a")}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {active.length > 0
-                      ? active.map((s) => s.user.name).join(", ")
-                      : "No sign-ups yet"}
+                  <p className="text-xs text-gray-400 truncate">
+                    {active.length > 0 ? active.map((s) => s.user.name).join(", ") : "Open"}
                   </p>
                 </div>
                 {role === "AMBASSADOR" && (
                   mySignup ? (
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
+                      className="text-red-500 border-red-200 hover:bg-red-50 shrink-0"
                       onClick={() => handleCancel(slot.id)}
                       disabled={loadingSlot === slot.id}
                     >
-                      <XCircle className="h-4 w-4 mr-1" /> Cancel
+                      Cancel
                     </Button>
                   ) : (
                     <Button
                       size="sm"
+                      variant="outline"
+                      className="shrink-0"
                       onClick={() => handleSignup(slot.id)}
                       disabled={loadingSlot === slot.id}
                     >
-                      <CheckCircle className="h-4 w-4 mr-1" /> Sign Up
+                      Sign Up
                     </Button>
                   )
                 )}
-              </CardContent>
-            </Card>
-          );
-        })}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Post-event data entry */}

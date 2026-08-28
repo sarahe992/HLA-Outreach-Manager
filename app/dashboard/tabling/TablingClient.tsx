@@ -33,7 +33,7 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     location: "", date: "", snackPlan: "", teamId: userTeamId ?? "",
-    slots: [{ startTime: "", endTime: "" }],
+    eventStart: "", eventEnd: "",
   });
   const [loading, setLoading] = useState(false);
   const [selectMode, setSelectMode] = useState(false);
@@ -62,35 +62,41 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
     router.refresh();
   }
 
-  function addSlot() {
-    setForm((p) => ({ ...p, slots: [...p.slots, { startTime: "", endTime: "" }] }));
+  function generate15MinSlots(start: string, end: string) {
+    const slots: { startTime: string; endTime: string }[] = [];
+    let cur = new Date(start);
+    const endDate = new Date(end);
+    while (cur < endDate) {
+      const next = new Date(cur.getTime() + 15 * 60 * 1000);
+      slots.push({ startTime: cur.toISOString(), endTime: (next <= endDate ? next : endDate).toISOString() });
+      cur = next;
+    }
+    return slots;
   }
 
-  function updateSlot(i: number, field: "startTime" | "endTime", value: string) {
-    setForm((p) => {
-      const slots = [...p.slots];
-      slots[i] = { ...slots[i], [field]: value };
-      return { ...p, slots };
-    });
-  }
+  const slotPreviewCount =
+    form.eventStart && form.eventEnd && new Date(form.eventEnd) > new Date(form.eventStart)
+      ? generate15MinSlots(form.eventStart, form.eventEnd).length
+      : 0;
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
+    if (slotPreviewCount === 0) return;
     setLoading(true);
     await fetch("/api/tabling", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        ...form,
+        location: form.location,
+        snackPlan: form.snackPlan,
+        teamId: form.teamId,
         date: form.date ? `${form.date}T12:00:00.000Z` : form.date,
-        slots: form.slots.map((s) => ({
-          startTime: s.startTime ? new Date(s.startTime).toISOString() : "",
-          endTime: s.endTime ? new Date(s.endTime).toISOString() : "",
-        })),
+        slots: generate15MinSlots(form.eventStart, form.eventEnd),
       }),
     });
     setLoading(false);
     setOpen(false);
+    setForm({ location: "", date: "", snackPlan: "", teamId: userTeamId ?? "", eventStart: "", eventEnd: "" });
     router.refresh();
   }
 
@@ -152,18 +158,24 @@ export default function TablingClient({ events, teams, role, userTeamId }: Props
                     onChange={(e) => setForm((p) => ({ ...p, snackPlan: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Time Slots</Label>
-                  {form.slots.map((slot, i) => (
-                    <div key={i} className="grid grid-cols-2 gap-2">
-                      <Input type="datetime-local" value={slot.startTime}
-                        onChange={(e) => updateSlot(i, "startTime", e.target.value)} required />
-                      <Input type="datetime-local" value={slot.endTime}
-                        onChange={(e) => updateSlot(i, "endTime", e.target.value)} required />
+                  <Label>Event Time</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-500">Start</p>
+                      <Input type="datetime-local" value={form.eventStart}
+                        onChange={(e) => setForm((p) => ({ ...p, eventStart: e.target.value }))} required />
                     </div>
-                  ))}
-                  <Button type="button" variant="outline" size="sm" onClick={addSlot}>
-                    + Add Slot
-                  </Button>
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-500">End</p>
+                      <Input type="datetime-local" value={form.eventEnd}
+                        onChange={(e) => setForm((p) => ({ ...p, eventEnd: e.target.value }))} required />
+                    </div>
+                  </div>
+                  {slotPreviewCount > 0 && (
+                    <p className="text-xs text-hla-600 font-medium">
+                      → {slotPreviewCount} sign-up slot{slotPreviewCount !== 1 ? "s" : ""} of 15 min each
+                    </p>
+                  )}
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Creating…" : "Create Event"}
